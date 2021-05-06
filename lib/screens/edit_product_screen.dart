@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shop_app/providers/products.dart';
 import '../providers/product.dart';
+import 'package:provider/provider.dart';
 
 class EditProductScreen extends StatefulWidget {
   static const routeName = '/edit-product';
@@ -51,10 +53,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
     final _isValid = _form.currentState.validate();
     if (!_isValid) return;
     _form.currentState.save();
-    print(_editProduct.title);
-    print(_editProduct.price);
-    print(_editProduct.imageUrl);
-    print(_editProduct.description);
+    Provider.of<Products>(context,listen: false).addProduct(_editProduct);
+    Navigator.of(context).pop();
   }
 
   @override

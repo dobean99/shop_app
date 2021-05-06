@@ -36,14 +36,16 @@ class Products with ChangeNotifier {
           'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
     ),
   ];
- // var _showFavorites = false;
+
+  // var _showFavorites = false;
 
   List<Product> get items {
     // if (_showFavorites)
     //   return _items.where((element) => element.isFavorite).toList();
     return [..._items];
   }
-  List<Product>get favoriteItems{
+
+  List<Product> get favoriteItems {
     return _items.where((element) => element.isFavorite).toList();
   }
 
@@ -51,17 +53,25 @@ class Products with ChangeNotifier {
     return _items.firstWhere((pro) => pro.id == id);
   }
 
-  void addProduct() {
+  void addProduct(Product product) {
+    final newProduct = Product(
+        id: DateTime.now().toString(),
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl);
+    _items.add(newProduct);
+    // _items.insert(0, newProduct);
     notifyListeners();
   }
 
-  // void showFavoritesOnly() {
-  //   _showFavorites = true;
-  //   notifyListeners();
-  // }
-  //
-  // void showAll() {
-  //   _showFavorites = false;
-  //   notifyListeners();
-  // }
+// void showFavoritesOnly() {
+//   _showFavorites = true;
+//   notifyListeners();
+// }
+//
+// void showAll() {
+//   _showFavorites = false;
+//   notifyListeners();
+// }
 }
