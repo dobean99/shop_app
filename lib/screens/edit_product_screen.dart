@@ -33,7 +33,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     'description': '',
     'imageUrl': '',
   };
-  var isLoading = false;
+  var _isLoading = false;
 
   @override
   void initState() {
@@ -83,43 +83,46 @@ class _EditProductScreenState extends State<EditProductScreen> {
     }
   }
 
-  void _saveForm() {
+  Future<void> _saveForm() async {
     final _isValid = _form.currentState.validate();
     if (!_isValid) return;
     _form.currentState.save();
     setState(() {
-      isLoading = true;
+      _isLoading = true;
     });
     if (_editProduct.id != null) {
       Provider.of<Products>(context, listen: false)
           .updateProduct(_editProduct.id, _editProduct);
       setState(() {
-        isLoading = false;
+        _isLoading = false;
       });
       Navigator.of(context).pop();
     } else {
-      Provider.of<Products>(context, listen: false)
-          .addProduct(_editProduct)
-          .catchError((error) {
-        return showDialog(
+      try {
+        await Provider.of<Products>(context, listen: false)
+            .addProduct(_editProduct);
+        print('add product 1');
+      } catch (error) {
+        showDialog(
             context: context,
-            builder: (ctx) => AlertDialog(
+            builder: (context) => AlertDialog(
                   title: Text('An error occurred '),
                   content: Text('Something went wrong'),
-                  actions:<Widget> [
+                  actions: <Widget>[
                     TextButton(
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
                         child: Text('OK'))
                   ],
-                ));
-      }).then((_) {
+                ),);
+        print('Catch error 1');
+      } finally {
         setState(() {
-          isLoading = false;
+          _isLoading = false;
         });
         Navigator.of(context).pop();
-      });
+      }
     }
   }
 
@@ -136,7 +139,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
               })
         ],
       ),
-      body: isLoading
+      body: _isLoading
           ? Center(
               child: CircularProgressIndicator(),
             )
