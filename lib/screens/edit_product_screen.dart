@@ -103,7 +103,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
             .addProduct(_editProduct);
         print('add product 1');
       } catch (error) {
-        showDialog(
+         await showDialog(
             context: context,
             builder: (context) => AlertDialog(
                   title: Text('An error occurred '),
