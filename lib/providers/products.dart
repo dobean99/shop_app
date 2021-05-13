@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/http_exception.dart';
 import 'dart:convert';
 import 'product.dart';
 import 'package:http/http.dart' as http;
@@ -51,19 +52,15 @@ class Products with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-  Product findById(String id) {
-    return _items.firstWhere((pro) => pro.id == id);
-  }
-
   Future<void> fetchProduct() async {
     var url = Uri.parse(
         'https://flutter-course-27722-default-rtdb.firebaseio.com/products.json');
     try {
       final response = await http.get(url);
       final fetchData = json.decode(response.body) as Map<String, dynamic>;
-      final List<Product> loadedProduct = [];
+      List<Product> _loadedProduct = [];
       fetchData.forEach((proId, proData) {
-        loadedProduct.add(Product(
+        _loadedProduct.add(Product(
             id: proId,
             title: proData['title'],
             description: proData['description'],
@@ -71,16 +68,23 @@ class Products with ChangeNotifier {
             imageUrl: proData['imageUrl'],
             isFavorite: proData['isFavorite']));
       });
-      _items=loadedProduct;
+      _items = _loadedProduct;
       notifyListeners();
     } catch (error) {
       throw (error);
     }
   }
 
+  Product findById(String id) {
+    return _items.firstWhere(
+      (pro) => pro.id == id,
+      orElse: () => null,
+    );
+  }
+
   Future<void> addProduct(Product product) async {
     var url = Uri.parse(
-        'https://flutter-course-27722-default-rtdb.firebaseio.com/products');
+        'https://flutter-course-27722-default-rtdb.firebaseio.com/products.json');
     try {
       final response = await http.post(url,
           body: json.encode({
@@ -107,18 +111,39 @@ class Products with ChangeNotifier {
     }
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
     final proIndex = _items.indexWhere((element) => element.id == id);
     if (proIndex >= 0) {
+      var url = Uri.parse(
+          'https://flutter-course-27722-default-rtdb.firebaseio.com/products/$id.json');
+      await http.patch(url,
+          body: json.encode({
+            'title': newProduct.title,
+            'price': newProduct.price,
+            'description': newProduct.description,
+            'imageUrl': newProduct.imageUrl
+          }));
       _items[proIndex] = newProduct;
       notifyListeners();
     } else
       print('...');
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((element) => element.id == id);
+  Future<void> deleteProduct(String id) async {
+    final url = Uri.parse(
+        'https://flutter-course-27722-default-rtdb.firebaseio.com/products/$id.');
+    final existedProductIndex=_items.indexWhere((element) => element.id == id);
+    var existedProduct=_items[existedProductIndex];
+    _items.removeAt(existedProductIndex);
     notifyListeners();
+     final response =await http.delete(url);
+       if(response.statusCode>=400)
+         {
+           _items.insert(existedProductIndex, existedProduct);
+           notifyListeners();
+           throw HttpException('Could not delete product.');
+         }
+    existedProduct=null;
   }
 // void showFavoritesOnly() {
 //   _showFavorites = true;

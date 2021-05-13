@@ -9,8 +9,8 @@ class UserProductsScreen extends StatelessWidget {
   static const routeName = '/user-product';
 
   const UserProductsScreen({Key key}) : super(key: key);
-  Future<void>refreshProducts(BuildContext context) async{
-    await Provider.of<Products>(context).fetchProduct();
+  Future<void>_refreshProducts(BuildContext context) async{
+    await Provider.of<Products>(context,listen: false).fetchProduct();
   }
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class UserProductsScreen extends StatelessWidget {
       ),
       drawer: AppDrawer(),
       body: RefreshIndicator(
-        onRefresh: ()=>refreshProducts(context),
+        onRefresh: ()=>_refreshProducts(context),
         child: Padding(
           padding: EdgeInsets.all(10),
           child: ListView.builder(

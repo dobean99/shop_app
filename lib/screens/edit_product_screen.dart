@@ -26,8 +26,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
     price: 0,
     imageUrl: '',
   );
-  var _init = false;
+  var _init = true;
   var _initValue = {
+    'id': '',
     'title': '',
     'price': '',
     'description': '',
@@ -43,12 +44,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   void didChangeDependencies() {
+    super.didChangeDependencies();
     if (_init) {
       final prodId = ModalRoute.of(context).settings.arguments.toString();
+      print(prodId);
       if (prodId != null) {
         _editProduct =
-            Provider.of<Products>(context, listen: false).findById(prodId);
+            Provider.of<Products>(context).findById(prodId);
         _initValue = {
+          //'id': prodId,
           'title': _editProduct.title,
           'price': _editProduct.price.toString(),
           'description': _editProduct.description,
@@ -57,9 +61,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
         };
         _imageUrlController.text = _editProduct.imageUrl;
       }
+      _init = false;
     }
-    _init = false;
-    super.didChangeDependencies();
+
+
   }
 
   @override
@@ -91,39 +96,35 @@ class _EditProductScreenState extends State<EditProductScreen> {
       _isLoading = true;
     });
     if (_editProduct.id != null) {
-      Provider.of<Products>(context, listen: false)
+      await Provider.of<Products>(context, listen: false)
           .updateProduct(_editProduct.id, _editProduct);
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.of(context).pop();
     } else {
       try {
         await Provider.of<Products>(context, listen: false)
             .addProduct(_editProduct);
         print('add product 1');
       } catch (error) {
-         await showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-                  title: Text('An error occurred '),
-                  content: Text('Something went wrong'),
-                  actions: <Widget>[
-                    TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('OK'))
-                  ],
-                ),);
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('An error occurred '),
+            content: Text('Something went wrong'),
+            actions: <Widget>[
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK'))
+            ],
+          ),
+        );
         print('Catch error 1');
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.of(context).pop();
       }
     }
+    setState(() {
+      _isLoading = false;
+    });
+    Navigator.of(context).pop();
   }
 
   @override
