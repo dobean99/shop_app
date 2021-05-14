@@ -145,7 +145,7 @@ class Products with ChangeNotifier {
          }
     existedProduct=null;
   }
-// void showFavoritesOnly() {
+// void showFavoritesOnlyz() {
 //   _showFavorites = true;
 //   notifyListeners();
 // }
