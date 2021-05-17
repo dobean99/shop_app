@@ -41,6 +41,10 @@ class Products with ChangeNotifier {
   ];
 
   // var _showFavorites = false;
+  final String token;
+  final String userId;
+
+  Products(this.token, this.userId, this._items);
 
   List<Product> get items {
     // if (_showFavorites)
@@ -52,12 +56,18 @@ class Products with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-  Future<void> fetchProduct() async {
+  Future<void> fetchProduct([bool filterByUser= false]) async {
+    final filterString = filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
     var url = Uri.parse(
-        'https://flutter-course-27722-default-rtdb.firebaseio.com/products.json');
+        'https://flutter-course-27722-default-rtdb.firebaseio.com/products.json?auth=$token&$filterString');
     try {
       final response = await http.get(url);
       final fetchData = json.decode(response.body) as Map<String, dynamic>;
+      if (fetchData == null) return;
+      url = Uri.parse(
+          'https://flutter-course-27722-default-rtdb.firebaseio.com/userFavorites/$userId.json?auth=$token');
+      final favoritesResponse = await http.get(url);
+      final favoriteData = json.decode(favoritesResponse.body);
       List<Product> _loadedProduct = [];
       fetchData.forEach((proId, proData) {
         _loadedProduct.add(Product(
@@ -66,7 +76,8 @@ class Products with ChangeNotifier {
             description: proData['description'],
             price: proData['price'],
             imageUrl: proData['imageUrl'],
-            isFavorite: proData['isFavorite']));
+            isFavorite:
+                favoriteData == null ? false : favoriteData[proId] ?? false));
       });
       _items = _loadedProduct;
       notifyListeners();
@@ -84,7 +95,7 @@ class Products with ChangeNotifier {
 
   Future<void> addProduct(Product product) async {
     var url = Uri.parse(
-        'https://flutter-course-27722-default-rtdb.firebaseio.com/products.json');
+        'https://flutter-course-27722-default-rtdb.firebaseio.com/products.json?auth=$token');
     try {
       final response = await http.post(url,
           body: json.encode({
@@ -93,7 +104,7 @@ class Products with ChangeNotifier {
             'description': product.description,
             'imageUrl': product.imageUrl,
             'id': product.id,
-            'isFavorite': product.isFavorite,
+            'creatorId': userId,
           }));
       final newProduct = Product(
           id: json.decode(response.body)['name'],
@@ -131,21 +142,21 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(String id) async {
     final url = Uri.parse(
-        'https://flutter-course-27722-default-rtdb.firebaseio.com/products/$id.');
-    final existedProductIndex=_items.indexWhere((element) => element.id == id);
-    var existedProduct=_items[existedProductIndex];
+        'https://flutter-course-27722-default-rtdb.firebaseio.com/products/$id.json?auth=$token');
+    final existedProductIndex =
+        _items.indexWhere((element) => element.id == id);
+    var existedProduct = _items[existedProductIndex];
     _items.removeAt(existedProductIndex);
     notifyListeners();
-     final response =await http.delete(url);
-       if(response.statusCode>=400)
-         {
-           _items.insert(existedProductIndex, existedProduct);
-           notifyListeners();
-           throw HttpException('Could not delete product.');
-         }
-    existedProduct=null;
+    final response = await http.delete(url);
+    if (response.statusCode >= 400) {
+      _items.insert(existedProductIndex, existedProduct);
+      notifyListeners();
+      throw HttpException('Could not delete product.');
+    }
+    existedProduct = null;
   }
-// void showFavoritesOnlyz() {
+// void showFavoritesOnly() {
 //   _showFavorites = true;
 //   notifyListeners();
 // }

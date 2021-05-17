@@ -26,19 +26,22 @@ class _EditProductScreenState extends State<EditProductScreen> {
     price: 0,
     imageUrl: '',
   );
-  var _init = true;
   var _initValue = {
-    'id': '',
+    'id': null,
     'title': '',
     'price': '',
     'description': '',
     'imageUrl': '',
   };
+  var _init = true;
   var _isLoading = false;
 
   @override
   void initState() {
     _imageUrlFocus.addListener(_updateImageUrl);
+    setState(() {
+      _init=true;
+    });
     super.initState();
   }
 
@@ -46,13 +49,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_init) {
-      final prodId = ModalRoute.of(context).settings.arguments.toString();
+      final prodId = ModalRoute.of(context).settings.arguments as String;
       print(prodId);
       if (prodId != null) {
         _editProduct =
-            Provider.of<Products>(context).findById(prodId);
+            Provider.of<Products>(context,listen: false).findById(prodId);
         _initValue = {
-          //'id': prodId,
           'title': _editProduct.title,
           'price': _editProduct.price.toString(),
           'description': _editProduct.description,
@@ -63,8 +65,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
       }
       _init = false;
     }
-
-
   }
 
   @override
@@ -100,9 +100,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
           .updateProduct(_editProduct.id, _editProduct);
     } else {
       try {
-        await Provider.of<Products>(context, listen: false)
+        await Provider.of<Products>(context,listen: false)
             .addProduct(_editProduct);
-        print('add product 1');
       } catch (error) {
         await showDialog(
           context: context,
@@ -157,7 +156,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       ),
                       textInputAction: TextInputAction.next,
                       onFieldSubmitted: (_) {
-                        Focus.of(context).requestFocus(_priceFocus);
+                        FocusScope.of(context).requestFocus(_priceFocus);
                       },
                       onSaved: (newValue) {
                         _editProduct = Product(
@@ -183,7 +182,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       keyboardType: TextInputType.number,
                       focusNode: _priceFocus,
                       onFieldSubmitted: (_) {
-                        Focus.of(context).requestFocus(_description);
+                        FocusScope.of(context).requestFocus(_description);
                       },
                       onSaved: (newValue) {
                         _editProduct = Product(
